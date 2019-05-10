@@ -1,45 +1,34 @@
 # frozen_string_literal: true
 
+# Requires
 require 'nokogiri'
 require 'open-uri'
 require 'set'
 
+# Constants
 FILES = (1..15).map { |idx| "http://us.metamath.org/mpeuni/mmtheorems#{idx}.html" }
 PROOFS_FOLDER = './proofs'
-
-def prove_it(proof, _index, file_name)
-  system "echo \"#{proof}\" > #{file_name}.proof" # Write formula to file
-  system "timeout 5 ./base_prover -p \"#{file_name}.proof\" >> #{file_name}.proof" # Get the proof
-end
-
-proofs = []
-FILES.each_with_index do |file, _index|
-  puts "Processing file #{file}"
-  sequents = Nokogiri::HTML(open(file)).css('tr td')
-                     .select { |td| td['colspan'].to_i == 3 }
-                     .map { |td| td.text.gsub(/[[:space:]]/, '') }
-                     .select { |td| td != '' && !td.match(/[A-Z]|[[0-9]+\.[0-9]+\.[0-9]+]/) }
-                     .select do |td|
-    td.include?('⊢') &&
-      !td.include?('add') &&
-      !td.include?('⊼') &&
-      !td.include?('⊻') &&
-      !td.include?('⊤')
-  end
-
-  proofs.push(*sequents)
-end
-puts "Parsed #{proofs.length} proofs"
-
-puts 'Substituting variables'
 INITIAL = 'a'.ord
 FINAL = 'z'.ord + 1
+
+proofs = FILES.map do |file|
+  puts "Processing file #{file}"
+  Nokogiri::HTML(open(file)).css('tr td')
+          .select { |td| td['colspan'].to_i == 3 }
+          .map { |td| td.text.gsub(/[[:space:]]/, '') }
+          .select do |td|
+    td != '' && td.include?('⊢') &&
+      !/[A-Z]|[[0-9]+\.[0-9]+\.[0-9]+]/.match?(td) && !/^.*(add|⊼|⊻|⊤).*$/.match?(td)
+  end
+end.flatten
+puts "Parsed #{proofs.length} proofs"
 
 # We create 4 differentes types os formulas:
 #   * Variables in alphabetic ascending order
 #   * Variables in alphabetic descending order
 #   * Random variables (this should create some provable theorems, but most unprovable (in theory))
 #   * Negation of the first part of the sequent (this should create theorems not provable)
+puts 'Substituting variables'
 proofs = proofs.map do |proof|
   [26.times.map do |index|
     inicial = INITIAL + index
@@ -70,6 +59,7 @@ proofs = proofs.map do |proof|
 
     parsed_proof = '(' + proof.gsub(regex) { |variable| hashmap[variable.to_sym] } + ').'
 
+    # Returns a normal, and a denied form, to create some false proofs
     [parsed_proof, "-#{parsed_proof}"]
   end.flatten,
    26.times.map do |index|
@@ -125,13 +115,12 @@ puts "Generated #{proofs.length} proofs"
 
 puts 'Start proving'
 threads = proofs.each_with_index.map do |proof, index|
-  Thread.new(proof, index, "#{PROOFS_FOLDER}/#{index}") do |pr, idx, file_name|
-    prove_it(pr, idx, file_name)
+  Thread.new(proof, "#{PROOFS_FOLDER}/#{index}") do |pr, file_name|
+    system "echo '#{pr}' > #{file_name}.proof" # Write formula to file
+    system "timeout 5 ./base_prover -p '#{file_name}.proof' >> #{file_name}.proof" # Get the proof
   end
 end
 
 puts 'Joining threads...'
-threads.each_with_index do |thread, _index|
-  thread.join
-end
+threads.each(&:join)
 puts 'Done!'
