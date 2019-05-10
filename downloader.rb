@@ -9,7 +9,7 @@ PROOFS_FOLDER = './proofs'
 
 def prove_it(proof, _index, file_name)
   system "echo \"#{proof}\" > #{file_name}.proof" # Write formula to file
-  system "timeout 5 ./assistant -p \"#{file_name}.proof\" >> #{file_name}.proof" # Get the proof
+  system "timeout 5 ./base_prover -p \"#{file_name}.proof\" >> #{file_name}.proof" # Get the proof
 end
 
 proofs = []
