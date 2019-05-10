@@ -1,0 +1,30 @@
+Let A a formula. The prover searchs an intutionistic proof of A (without Raa).
+In case of failure, it searchs a classical proof and
+in case of failure, it gives a counter-model.
+
+La commande
+assistant -p A
+affiche, sur la sortie standart, la preuve de la formule écrite dans le fichier A.
+Par exemple A peut comporter la formule "a=>a .", autrement dit une formule suivie d'un point.Et la preuve affichée est
+assume a.
+therefore a=>a.
+
+La commande
+assistant -a B
+annote une preuve donnée. Le fichier B comporte une formule suivie de sa preuve sans justification, par exemple il comporte 
+a=>a.
+assume a.
+therefore a=>a.
+Sur cet exemple, la commande affiche sur le fichier standart
+1    assume a.
+2    therefore a => a.   =>I 1,1
+La commande 
+assistant -b B
+annote la preuve donnée mais les justifications d'une formule sont sous la ligne de la formule
+1    assume a.
+2    therefore a => a.
+     =>I 1,1
+Cette présentation est moins jolie que celle avec les justifications à droite mais elle est plus
+adaptée aux mobiles.
+
+

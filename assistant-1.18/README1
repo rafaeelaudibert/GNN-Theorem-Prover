@@ -1,0 +1,25 @@
+Version  1.15
+On ne maintient plus que la version anglaise.
+On ne maintient plus qu'une version de l'assistant.
+
+Le prouveur appliqué à une formule, recherche une preuve intuitioniste.
+S'il n'y en a pas, la formule n'est pas prouvable sans RAA, alors
+le prouveur recherche une preuve classique (si possible courte).
+S'il n'y en a pas, la formule n'est pas valide, alors 
+le prouveur donne un contre-modèle de la formule.
+
+Version actuelle 1.18
+Adaptation du prouveur aux mobiles :
+(1) via header.inc et index.php
+ajout dans la section entête de
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<style>
+@viewport{orientation:auto;width:device-width;zoom:1.0;}
+</style>
+pour l'adaptation à firefox (meta) et à chrome (@)
+(2) Ajout d'un bouton "Annotate Proof for mobile" pour que les justifications d'une formule 
+soient sous la formule (au lieu d'être à droite de la formule). Cela permet de lire 
+la preuve avec justifications sur un mobile.
+(3) Modification de download.php : le source du site doit être à la racine du site
+
+
